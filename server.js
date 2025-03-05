@@ -1,35 +1,50 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import pkg from "pg";
+const { Pool } = pkg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const users = []; // Temporary in-memory storage (use a real DB later)
-
-// REGISTER
 app.post("/auth/register", async (req, res) => {
   const { email, password } = req.body;
-  if (users.find((u) => u.email === email)) {
-    return res.status(400).json({ error: "User already exists" });
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+      [email, hashedPassword]
+    );
+
+    res.json({ message: "User registered successfully!", user: result.rows[0] });
+  } catch (error) {
+    console.error("🔥 Registration error:", error);
+    res.status(400).json({ error: "User already exists" });
   }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  users.push({ email, password: hashedPassword });
-  res.json({ message: "User registered successfully!" });
 });
 
-// LOGIN
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
-  const user = users.find((u) => u.email === email);
+
+  const userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+  const user = userResult.rows[0];
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const token = jwt.sign({ email: user.email }, "secret", { expiresIn: "1h" });
+  const token = jwt.sign({ id: user.id, email: user.email }, "secret", { expiresIn: "1h" });
   res.json({ email: user.email, token });
 });
 
