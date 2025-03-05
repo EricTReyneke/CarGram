@@ -61,6 +61,10 @@
     animation: titleFadeIn 1s ease-in-out;
 }
 
+.formContainer{
+  width: 80%;
+}
+
 .subtitle {
   color: rgba(255, 255, 255, 0.7);
   font-size: 1rem;
@@ -80,6 +84,7 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   width: 80%;
   transition: all 0.3s ease-in-out;
+  width: 100%;
 }
 
 /* Fix the blurry input focus effect */
@@ -132,6 +137,7 @@
   transition: all 0.3s ease-in-out;
   margin-top: 15px;
   box-shadow: 0 4px 15px rgba(0, 112, 243, 0.3);
+  width: 100%;
 }
 
 /* Floating Hover Effect */
